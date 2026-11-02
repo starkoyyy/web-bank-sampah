@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transaksi_tarik', function (Blueprint $table) {
-            $table->enum('metode_penarikan', ['Tunai', 'Transfer', 'E-Wallet'])->default('Tunai')->after('jumlah_tarik');
-            $table->string('detail_tujuan')->nullable()->after('metode_penarikan');
+            if (!Schema::hasColumn('transaksi_tarik', 'metode_penarikan')) {
+                $table->enum('metode_penarikan', ['Tunai', 'Transfer', 'E-Wallet'])->default('Tunai');
+            }
+            if (!Schema::hasColumn('transaksi_tarik', 'detail_tujuan')) {
+                $table->string('detail_tujuan')->nullable();
+            }
         });
     }
 
@@ -23,7 +27,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transaksi_tarik', function (Blueprint $table) {
-            $table->dropColumn(['metode_penarikan', 'detail_tujuan']);
+            if (Schema::hasColumn('transaksi_tarik', 'metode_penarikan')) {
+                $table->dropColumn('metode_penarikan');
+            }
+            if (Schema::hasColumn('transaksi_tarik', 'detail_tujuan')) {
+                $table->dropColumn('detail_tujuan');
+            }
         });
     }
 };

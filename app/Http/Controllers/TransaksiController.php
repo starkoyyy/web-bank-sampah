@@ -18,21 +18,31 @@ class TransaksiController extends Controller
 
     public function store(Request $request)
     {
-        // ==========================================
-        // LAPIS PENGAMAN: Minimal 1 Kg
-        // ==========================================
-        if ($request->berat < 1) {
-            return back()->with('error', 'Gagal! Berat sampah minimal adalah 1 Kg.');
-        }
+        // Validasi input yang ketat
+        $request->validate([
+            'kategori_id' => 'required|integer|exists:kategori,id',
+            'berat' => 'required|numeric|min:0.1|max:10000',
+        ], [
+            'kategori_id.required' => 'Pilih kategori sampah terlebih dahulu.',
+            'kategori_id.exists' => 'Kategori sampah tidak valid atau tidak ditemukan.',
+            'berat.required' => 'Berat sampah wajib diisi.',
+            'berat.numeric' => 'Berat sampah harus berupa angka yang valid.',
+            'berat.min' => 'Berat sampah minimal adalah 0.1 Kg.',
+            'berat.max' => 'Berat sampah melebihi batas wajar (maksimal 10.000 Kg).',
+        ]);
 
         $nasabah = Nasabah::where('user_id', Auth::id())->first();
 
         if (!$nasabah) {
-            return back()->with('error', 'Data Anda belum lengkap sebagai nasabah.');
+            return back()->with('error', 'Profil data Anda sebagai nasabah tidak ditemukan.');
         }
 
         $kategori = DB::table('kategori')->where('id', $request->kategori_id)->first();
-        $total_harga = $request->berat * $kategori->harga_per_kg;
+        if (!$kategori) {
+            return back()->with('error', 'Kategori sampah tidak ditemukan.');
+        }
+
+        $total_harga = round($request->berat * $kategori->harga_per_kg, 2);
 
         DB::table('transaksi_setor')->insert([
             'nasabah_id' => $nasabah->id,

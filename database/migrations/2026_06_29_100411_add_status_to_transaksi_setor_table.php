@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transaksi_setor', function (Blueprint $table) {
-            $table->string('status', 50)->default('disetujui')->after('tanggal_setor');
+            if (!Schema::hasColumn('transaksi_setor', 'status')) {
+                $table->string('status', 50)->default('disetujui');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transaksi_setor', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('transaksi_setor', 'status')) {
+                $table->dropColumn('status');
+            }
         });
     }
 };

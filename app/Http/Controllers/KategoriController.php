@@ -32,8 +32,19 @@ class KategoriController extends Controller
     // Simpan data kategori baru
     public function store(Request $request)
     {
+        $request->validate([
+            'nama_kategori' => 'required|string|max:100|unique:kategori,nama_kategori',
+            'harga_per_kg' => 'required|numeric|min:1|max:100000000'
+        ], [
+            'nama_kategori.required' => 'Nama kategori wajib diisi.',
+            'nama_kategori.unique' => 'Nama kategori sudah terdaftar.',
+            'harga_per_kg.required' => 'Harga per kg wajib diisi.',
+            'harga_per_kg.numeric' => 'Harga per kg harus berupa nominal angka.',
+            'harga_per_kg.min' => 'Harga per kg minimal adalah Rp 1.',
+        ]);
+
         Kategori::create([
-            'nama_kategori' => $request->nama_kategori,
+            'nama_kategori' => strip_tags($request->nama_kategori),
             'harga_per_kg' => $request->harga_per_kg
         ]);
         return redirect('/admin/kategori')->with('success', 'Kategori baru berhasil ditambahkan!');
@@ -42,16 +53,28 @@ class KategoriController extends Controller
     // Tampilkan form edit
     public function edit($id)
     {
-        $kategori = Kategori::find($id);
+        $kategori = Kategori::findOrFail($id);
         return view('admin.kategori.edit', compact('kategori'));
     }
 
     // Simpan perubahan harga/nama
     public function update(Request $request, $id)
     {
-        $kategori = Kategori::find($id);
+        $kategori = Kategori::findOrFail($id);
+
+        $request->validate([
+            'nama_kategori' => 'required|string|max:100|unique:kategori,nama_kategori,' . $kategori->id,
+            'harga_per_kg' => 'required|numeric|min:1|max:100000000'
+        ], [
+            'nama_kategori.required' => 'Nama kategori wajib diisi.',
+            'nama_kategori.unique' => 'Nama kategori sudah terdaftar.',
+            'harga_per_kg.required' => 'Harga per kg wajib diisi.',
+            'harga_per_kg.numeric' => 'Harga per kg harus berupa nominal angka.',
+            'harga_per_kg.min' => 'Harga per kg minimal adalah Rp 1.',
+        ]);
+
         $kategori->update([
-            'nama_kategori' => $request->nama_kategori,
+            'nama_kategori' => strip_tags($request->nama_kategori),
             'harga_per_kg' => $request->harga_per_kg
         ]);
         return redirect('/admin/kategori')->with('success', 'Data kategori berhasil diperbarui!');

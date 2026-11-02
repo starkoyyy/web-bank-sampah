@@ -26,7 +26,7 @@ View adalah file `blade.php` yang mengatur tampilan aplikasi (berada di folder `
 *   **`layouts/`**: *Template* atau kerangka dasar tampilan (header, footer, navigasi) yang digunakan berulang oleh halaman lain agar desain konsisten.
 *   **`tarik/`**: Tampilan form pengajuan penarikan saldo untuk Nasabah.
 *   **`transaksi/`**: Tampilan form pengajuan penyetoran sampah untuk Nasabah.
-*   **`welcome.blade.php`**: Tampilan halaman beranda utama (dashboard) untuk Nasabah ketika baru login.
+*   **`dashboard.blade.php`**: Tampilan halaman beranda utama (dashboard) untuk Nasabah ketika baru login.
 
 ---
 

@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('nasabah', function (Blueprint $table) {
-            $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan'])->nullable()->after('alamat');
+            if (!Schema::hasColumn('nasabah', 'jenis_kelamin')) {
+                $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan'])->nullable();
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('nasabah', function (Blueprint $table) {
-            $table->dropColumn('jenis_kelamin');
+            if (Schema::hasColumn('nasabah', 'jenis_kelamin')) {
+                $table->dropColumn('jenis_kelamin');
+            }
         });
     }
 };

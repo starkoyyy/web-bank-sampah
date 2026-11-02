@@ -11,36 +11,48 @@ class AuthController extends Controller
 {
     public function registerStore(Request $request)
     {
-        // 1. Validasi input agar lebih aman
+        // 1. Validasi input ketat
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'username' => 'required|string|unique:users',
-            'password' => 'required|min:6',
-            'alamat' => 'required|string',
+            'nama' => 'required|string|max:100',
+            'username' => 'required|string|alpha_dash|min:3|max:50|unique:users,username',
+            'password' => 'required|string|min:6|max:100',
+            'alamat' => 'required|string|max:500',
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan'
+        ], [
+            'nama.required' => 'Nama lengkap wajib diisi.',
+            'username.required' => 'Username wajib diisi.',
+            'username.alpha_dash' => 'Username hanya boleh berisi huruf, angka, tanda strip (-) dan garis bawah (_).',
+            'username.unique' => 'Username sudah terdaftar, silakan gunakan username lain.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal terdiri dari 6 karakter.',
+            'alamat.required' => 'Alamat wajib diisi.',
+            'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih.',
         ]);
 
-        // 2. Simpan ke tabel users
-        $user = new User();
-        $user->username = $request->username;
-        $user->password = Hash::make($request->password);
-        $user->role = 'nasabah';
-        
-        // SUDAH DIPERBAIKI: Menangkap $request->nama
-        $user->nama = $request->nama; 
-        $user->save();
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            // 2. Simpan ke tabel users
+            $user = new User();
+            $user->username = strtolower(trim($request->username));
+            $user->password = Hash::make($request->password);
+            $user->role = 'nasabah';
+            $user->nama = strip_tags(trim($request->nama)); 
+            $user->save();
 
-        // 3. Simpan ke tabel nasabah
-        $nasabah = new Nasabah();
-        $nasabah->user_id = $user->id;
-        
-        // SUDAH DIPERBAIKI: Menangkap $request->alamat sebagai satu kesatuan teks
-        $nasabah->alamat = $request->alamat; 
-        $nasabah->jenis_kelamin = $request->jenis_kelamin;
-        $nasabah->total_saldo = 0;
-        $nasabah->save();
+            // 3. Simpan ke tabel nasabah
+            $nasabah = new Nasabah();
+            $nasabah->user_id = $user->id;
+            $nasabah->alamat = strip_tags(trim($request->alamat)); 
+            $nasabah->jenis_kelamin = $request->jenis_kelamin;
+            $nasabah->total_saldo = 0;
+            $nasabah->save();
 
-        return redirect('/login')->with('success', 'Akun berhasil dibuat! Silakan login.');
+            \Illuminate\Support\Facades\DB::commit();
+            return redirect('/login')->with('success', 'Akun berhasil dibuat! Silakan login.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return back()->with('error', 'Terjadi kendala sistem saat membuat akun. Silakan coba kembali.');
+        }
     }
 
     public function loginProses(Request $request)

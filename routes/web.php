@@ -14,8 +14,8 @@ use App\Http\Controllers\DashboardController;
 // ==========================================
 Route::get('/login', function () { return view('auth.login'); })->name('login');
 Route::get('/register', function () { return view('auth.register'); });
-Route::post('/register', [AuthController::class, 'registerStore']);
-Route::post('/login', [AuthController::class, 'loginProses']);
+Route::post('/register', [AuthController::class, 'registerStore'])->middleware('throttle:10,1');
+Route::post('/login', [AuthController::class, 'loginProses'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // ==========================================

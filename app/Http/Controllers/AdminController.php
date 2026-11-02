@@ -174,33 +174,86 @@ class AdminController extends Controller
 
     public function setujuiTarik($id)
     {
-        $tarik = DB::table('transaksi_tarik')->where('id', $id)->first();
-        if ($tarik && $tarik->status === 'pending') {
-            DB::table('nasabah')->where('id', $tarik->nasabah_id)->decrement('total_saldo', $tarik->jumlah_tarik);
+        DB::beginTransaction();
+        try {
+            $tarik = DB::table('transaksi_tarik')->where('id', $id)->lockForUpdate()->first();
+            if (!$tarik || $tarik->status !== 'pending') {
+                DB::rollBack();
+                return back()->with('error', 'Pengajuan penarikan tidak ditemukan atau sudah diproses.');
+            }
+
+            $nasabah = DB::table('nasabah')->where('id', $tarik->nasabah_id)->lockForUpdate()->first();
+            if (!$nasabah) {
+                DB::rollBack();
+                return back()->with('error', 'Data nasabah tidak ditemukan.');
+            }
+
+            if ($nasabah->total_saldo < $tarik->jumlah_tarik) {
+                DB::rollBack();
+                return back()->with('error', 'Gagal menyetujui! Saldo nasabah saat ini (Rp ' . number_format($nasabah->total_saldo, 0, ',', '.') . ') tidak mencukupi untuk ditarik.');
+            }
+
+            DB::table('nasabah')->where('id', $nasabah->id)->decrement('total_saldo', $tarik->jumlah_tarik);
             DB::table('transaksi_tarik')->where('id', $id)->update(['status' => 'disetujui']);
+
+            DB::commit();
+            return back()->with('success', 'Pengajuan berhasil disetujui. Saldo warga telah dipotong.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan sistem saat memproses transaksi.');
         }
-        return back()->with('success', 'Pengajuan berhasil disetujui. Saldo warga telah dipotong.');
     }
 
     public function tolakTarik($id)
     {
-        DB::table('transaksi_tarik')->where('id', $id)->update(['status' => 'ditolak']);
+        $updated = DB::table('transaksi_tarik')
+            ->where('id', $id)
+            ->where('status', 'pending')
+            ->update(['status' => 'ditolak']);
+
+        if (!$updated) {
+            return back()->with('error', 'Pengajuan tidak ditemukan atau sudah diproses sebelumnya.');
+        }
         return back()->with('error', 'Pengajuan penarikan ditolak.');
     }
 
     public function setujuiSetor($id)
     {
-        $setor = DB::table('transaksi_setor')->where('id', $id)->first();
-        if ($setor && $setor->status === 'pending') {
-            DB::table('nasabah')->where('id', $setor->nasabah_id)->increment('total_saldo', $setor->total_harga);
+        DB::beginTransaction();
+        try {
+            $setor = DB::table('transaksi_setor')->where('id', $id)->lockForUpdate()->first();
+            if (!$setor || $setor->status !== 'pending') {
+                DB::rollBack();
+                return back()->with('error', 'Setoran tidak ditemukan atau sudah diproses.');
+            }
+
+            $nasabah = DB::table('nasabah')->where('id', $setor->nasabah_id)->lockForUpdate()->first();
+            if (!$nasabah) {
+                DB::rollBack();
+                return back()->with('error', 'Data nasabah tidak ditemukan.');
+            }
+
+            DB::table('nasabah')->where('id', $nasabah->id)->increment('total_saldo', $setor->total_harga);
             DB::table('transaksi_setor')->where('id', $id)->update(['status' => 'disetujui']);
+
+            DB::commit();
+            return back()->with('success', 'Setoran berhasil disetujui. Saldo nasabah telah bertambah.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan sistem saat menyetujui setoran.');
         }
-        return back()->with('success', 'Setoran berhasil disetujui. Saldo nasabah telah bertambah.');
     }
 
     public function tolakSetor($id)
     {
-        DB::table('transaksi_setor')->where('id', $id)->update(['status' => 'ditolak']);
+        $updated = DB::table('transaksi_setor')
+            ->where('id', $id)
+            ->where('status', 'pending')
+            ->update(['status' => 'ditolak']);
+
+        if (!$updated) {
+            return back()->with('error', 'Setoran tidak ditemukan atau sudah diproses sebelumnya.');
+        }
         return back()->with('error', 'Setoran telah ditolak.');
     }
 
