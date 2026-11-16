@@ -1,0 +1,27 @@
+# File rahasia dan kredensial sensitif
+.env
+.env.backup
+.env.production
+storage/*.key
+
+# Repositori Git dan CI/CD
+.git
+.github
+.gitattributes
+.gitignore
+
+# Dependensi lokal (akan di-build ulang di container)
+vendor
+node_modules
+/public/hot
+/public/storage
+
+# File testing dan cache IDE
+.phpunit.result.cache
+tests
+.idea
+.vscode
+
+# Log dan data lokal
+storage/logs/*
+database/*.sqlite

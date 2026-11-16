@@ -1,0 +1,57 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bank_sampah_app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      APP_NAME: "Bank Sampah Desa Winduherang"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY:-base64:+iOXckWy09o9QCnWmUf1Ytjn51K7XDIowZcz0YuHCw4=}
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: db_bank_sampah
+      DB_USERNAME: bank_user
+      DB_PASSWORD: bank_password
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - bank_sampah_network
+
+  db:
+    image: mysql:8.0
+    container_name: bank_sampah_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: db_bank_sampah
+      MYSQL_USER: bank_user
+      MYSQL_PASSWORD: bank_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bank_sampah_network
+
+volumes:
+  db_data:
+
+networks:
+  bank_sampah_network:
+    driver: bridge
