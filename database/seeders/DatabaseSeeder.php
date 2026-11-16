@@ -18,22 +18,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Akun Admin
+        // 1. Akun Admin (Dikonfigurasi via .env)
         User::firstOrCreate(
-            ['username' => 'admin'],
+            ['username' => env('SEED_ADMIN_USERNAME', 'admin')],
             [
                 'nama' => 'Admin Bank Sampah',
-                'password' => Hash::make('admin123'),
+                'password' => Hash::make(env('SEED_ADMIN_PASSWORD', 'admin123')),
                 'role' => 'admin',
             ]
         );
 
-        // 2. Akun Nasabah Contoh
+        // 2. Akun Nasabah Contoh (Dikonfigurasi via .env)
         $nasabahUser = User::firstOrCreate(
-            ['username' => 'nasabah'],
+            ['username' => env('SEED_NASABAH_USERNAME', 'nasabah')],
             [
                 'nama' => 'Nasabah Contoh',
-                'password' => Hash::make('nasabah123'),
+                'password' => Hash::make(env('SEED_NASABAH_PASSWORD', 'nasabah123')),
                 'role' => 'nasabah',
             ]
         );
