@@ -351,7 +351,7 @@
                             <span class="text-muted fw-medium" style="font-size: 0.75rem;">Selamat datang,</span>
                             <strong class="text-dark" style="font-size: 0.9rem;">{{ Auth::user()->nama }}</strong>
                         </div>
-                        <form id="form-logout" action="{{ route('logout') }}" method="POST" class="m-0">
+                        <form id="form-logout" action="/logout" method="POST" class="m-0">
                             @csrf
                             <button type="button" onclick="confirmLogout()" class="btn btn-logout rounded-circle shadow-sm" title="Logout">
                                 <i class="bi bi-power"></i>

@@ -108,7 +108,7 @@
                     <p class="small" style="opacity: 0.8;">Silakan masuk ke akun Anda</p>
                 </div>
 
-                <form action="{{ route('login') }}" method="POST">
+                <form action="/login" method="POST">
                     @csrf
                     <div class="mb-3">
                         <label class="form-label small fw-medium">Username</label>
